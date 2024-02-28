@@ -1,0 +1,73 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Cart {
+  id        String     @id @default(uuid())
+  createdAt DateTime   @default(now())
+  userId    String     @unique
+  items     CartItem[]
+  Order     Order[]
+}
+
+model CartItem {
+  id        String  @id @default(uuid())
+  quantity  Int
+  productId String
+  cartId    String
+  cart      Cart    @relation(fields: [cartId], references: [id])
+  product   Product @relation(fields: [productId], references: [id])
+
+  @@unique([productId, cartId])
+}
+
+model Product {
+  id          String        @id @default(uuid())
+  name        String
+  userId      String
+  description String
+  price       Float
+  image       String?
+  category    Category      @relation(fields: [categoryId], references: [id])
+  categoryId  String
+  cartItems   CartItem[]
+  orderDetail OrderDetail[]
+  quantity    Float?
+  orders      Order[]       @relation("OrderProduct")
+}
+
+model Category {
+  id       String    @id @default(uuid())
+  name     String
+  image    String?
+  products Product[]
+}
+
+model Order {
+  id           String        @id @default(uuid())
+  createdAt    DateTime      @default(now())
+  status       String        @default("PENDING")
+  total        Float
+  userId       String
+  cartId       String?
+  cart         Cart?         @relation(fields: [cartId], references: [id])
+  orderDetails OrderDetail[]
+  products     Product[]     @relation("OrderProduct")
+}
+
+model OrderDetail {
+  id        String  @id @default(uuid())
+  quantity  Int
+  productId String
+  orderId   String
+  order     Order   @relation(fields: [orderId], references: [id])
+  product   Product @relation(fields: [productId], references: [id])
+}
